@@ -23,20 +23,11 @@ namespace nimble_life
             Delay = 0, // //artificial delay in milliseconds. 0 for none
             AgeOfMaturity = 18,
             OneInThisIsHerby = 40,
-            //startingHerbivoreGenes = new Dictionary<string, float>
-            //{
-            //    herby.Genes[hg.EnergyToBaby.ToString()] = (float)0.3;
-            //    herby.Genes[hg.MatingProbability.ToString()] = (float)0.3;
-            //    herby.Genes[hg.MinFoodAvailableForBaby.ToString()] = 30;
-            //    herby.Genes[hg.WorthMovingTo.ToString()] = 15;
-            //}
         };
 
         public MainForm()
         {
             InitializeComponent();
-
-
             greatestGenes = new Dictionary<string, float>();
             greatestGenes[hg.EnergyToBaby.ToString()] = (float)0.16;
             greatestGenes[hg.MatingProbability.ToString()] = (float)0.7;
@@ -46,7 +37,6 @@ namespace nimble_life
             greatestGenes[hg.MaxAge.ToString()] = 343;
             greatestGenes[hg.MaxMutationFactor.ToString()] = (float)0.13;
             greatestGenes[hg.SpeciationDistance.ToString()] = (float)25;
-
 
             //See http://stackoverflow.com/questions/8046560/how-to-stop-flickering-c-sharp-winforms
             typeof(Panel).InvokeMember("DoubleBuffered",
@@ -113,7 +103,7 @@ namespace nimble_life
                 this.Board = CreateBoard(this.Settings);
             }
 
-            //HACK: START AGAIN!
+            //HACK: Gone too long, so START AGAIN!
             //if (Board.Generation > 50000)
             //{
             //    this.Board = CreateBoard(this.Settings);
@@ -150,17 +140,13 @@ namespace nimble_life
                 var babies = new List<IPiece>();
                 foreach (var p in Board.Pieces)
                 {
+                    //Debug.WriteLine((p as IAnimal).Species);
                     var baby = p.TakeTurn(Board);
                     if (baby != null) babies.Add(baby);
                     if (baby != null && baby is Herbivore)
                     {
                         var babyGenes = (baby as Herbivore).Genes;
-                        latestGenes = Clone(babyGenes);// new Dictionary<string, float>();
-
-                        //foreach (var k in babyGenes.Keys)
-                        //{
-                        //    latestGenes[k] = babyGenes[k];
-                        //}
+                        latestGenes = Clone(babyGenes);
                     }
                 }
                 if (babies.Count > 0)
@@ -171,7 +157,7 @@ namespace nimble_life
                     }
                 }
 
-                //check boundary type conditions
+                // check boundary type conditions
                 foreach (var p in Board.Pieces)
                 {
                     if (p is IAnimal)
@@ -188,15 +174,14 @@ namespace nimble_life
                     
                 }
             }
-
-            //System.Threading.Thread.Sleep(1000);
+            
             bm = RenderBoard();
             lblGeneration.Text = Board.Generation.ToString();
             lblStuff.Text = Board.Pieces.Count.ToString();
             lblMaxGenerations.Text = maxGenerations.ToString();
             lblMinGenerations.Text = minGenerations.ToString();
             this.splitContainerMain.Panel2.Invalidate();
-            //Application.DoEvents();
+            
             if (Settings.Delay > 0)
             {
                 System.Threading.Thread.Sleep(Settings.Delay);
@@ -223,11 +208,13 @@ namespace nimble_life
                 X = splitContainerMain.Panel2.Width,
                 Y = splitContainerMain.Panel2.Height
             };
+
             var tileSizeInPixels = new Location
             {
                 X = boardSizeInPixels.X / Board.Size.X,
                 Y = boardSizeInPixels.Y / Board.Size.Y
             };
+
             var result = new Bitmap(boardSizeInPixels.X, boardSizeInPixels.Y);
 
             using (var g = Graphics.FromImage(result))
@@ -243,12 +230,6 @@ namespace nimble_life
                             y * tileSizeInPixels.Y,
                             tileSizeInPixels.X,
                             tileSizeInPixels.Y);
-                        /*g.DrawRectangle(
-                            System.Drawing.Pens.Black,
-                            x * tileSizeInPixels.X,
-                            y * tileSizeInPixels.Y,
-                            tileSizeInPixels.X,
-                            tileSizeInPixels.Y);*/
 
                         var animal = tile.Animal;
                         if (animal != null)
@@ -270,7 +251,7 @@ namespace nimble_life
                                 radius.X*2,
                                 radius.Y*2);
                             
-                            if (animal.IsDead)
+                            if (animal.IsDead) // Draw thick Red X
                             {
                                 g.DrawLine(new System.Drawing.Pen(System.Drawing.Brushes.Red, 3),
                                     x * tileSizeInPixels.X + (int)(tileSizeInPixels.X / 4.0),
