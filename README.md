@@ -2,5 +2,9 @@
 
 Simulation of simple life forms on a grid. Includes basic evolution (mutation and cross over).
 
-Not cellular automata, though similar at a glance.
+![Animated gif of electric-sheep simulator](animated_sheep.gif)
+
+This is not a cellular automata, though it may appear to be similar at a glance.
+
+
 
