@@ -147,7 +147,7 @@ namespace nimble_life
         {
             throw new NotImplementedException();
         }
-        private static int speciesNumber = 0;
+
         public IPiece TakeTurn(Board board)
         {
             if (this.IsDead) return null;
@@ -203,32 +203,6 @@ namespace nimble_life
                 foreach (var t in neighbors)
                 {
                     if (t.Animal != null
-                        && t.Animal.IsDead == false)
-                    {
-
-                        var dist = GeneDistance(t.Animal, this);
-
-                        if (dist > this.Genes[hg.SpeciationDistance.ToString()])
-                        {
-                            if (t.Animal.Species == this.Species)
-                            {
-                                speciesNumber++;
-                                this.Species = "Cow_" + speciesNumber.ToString();
-                            }
-                        }
-                        else
-                        {
-                            this.Species = t.Animal.Species;
-                        }
-                    }
-                    //    && t.Animal.Species == this.Species // picky
-                    //       // picky!
-                    //    &&  > this.Genes[hg.SpeciationDistance.ToString()]) // picky
-                    //{
-                    //    this.Species += ".1"; 
-                    //}
-
-                    if (t.Animal != null
                         && t.Animal.Species == this.Species // picky
                         && t.Animal.IsDead == false   // picky!
                         && t.Animal.Age > t.Animal.AgeOfMaturity // picky
@@ -283,7 +257,6 @@ namespace nimble_life
 
 
                         var MaxMutationFactor = this.Genes[hg.MaxMutationFactor.ToString()];
-                        //var MaxMutationFactor = 0.13;
 
                         foreach (var d in this.Genes.Keys)
                         {
