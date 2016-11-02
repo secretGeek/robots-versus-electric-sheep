@@ -14,5 +14,6 @@ namespace nimble_life
         public int Delay { get; set; }
         public int AgeOfMaturity { get; internal set; }
         public int OneInThisIsHerby { get; set; }
+        public int OneInThisIsRobot { get; set; }
     }
 }

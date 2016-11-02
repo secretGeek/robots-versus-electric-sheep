@@ -20,9 +20,10 @@ namespace nimble_life
             Width = 50,
             Height = 50,
             //MaxAge = 100,
-            Delay = 0, // //artificial delay in milliseconds. 0 for none
+            Delay = 20, // //artificial delay in milliseconds. 0 for none
             AgeOfMaturity = 18,
             OneInThisIsHerby = 40,
+            OneInThisIsRobot = 40,
         };
 
         public MainForm()
@@ -62,43 +63,13 @@ namespace nimble_life
             RefreshBoard();
         }
 
-        //Hack: for trying to evolve better defaults
-        //int popatResetLimit = 0;
-        //int resetLimit = 10;
-        //float relaxationFactor = 5;
-        //int bottleNeckMaximum = 300;
-
         private void RefreshBoard()
         {
             maxGenerations = Math.Max(maxGenerations, Board.Generation);
             Board.Generation++;
             
             if (Board.Pieces== null || Board.Pieces.Count == 0 )
-            //Hack: for trying to evolve better defaults
-            //||Board.Generation > resetLimit)
             {
-                //Hack: for trying to evolve better defaults
-                //if (Board.Generation >= resetLimit && Board.Pieces.Count > popatResetLimit
-                //    && Board.Pieces.Count < bottleNeckMaximum)
-                //{
-                //    popatResetLimit = Math.Min(bottleNeckMaximum - 20, Board.Pieces.Count);
-                //    resetLimit += 10;
-                //    if (latestGenes != null && latestGenes.Count > 0)
-                //    {
-                //        greatestGenes = Clone(latestGenes);
-                //    }
-                //    relaxationFactor = 5;
-                //} else
-                //{
-                //    popatResetLimit -= (int)relaxationFactor; //relax the limit a little....
-                //    relaxationFactor = (relaxationFactor * (float)1.05);  //relax by 5% more, compounding 
-                //    if (popatResetLimit < 30)
-                //    {
-                //        popatResetLimit = 30; //minimum viable. never accept less than this.
-                //        resetLimit -= 1;
-                //    }
-                //}
-
                 minGenerations = Math.Min(minGenerations, Board.Generation);
                 this.Board = CreateBoard(this.Settings);
             }
@@ -140,7 +111,6 @@ namespace nimble_life
                 var babies = new List<IPiece>();
                 foreach (var p in Board.Pieces)
                 {
-                    //Debug.WriteLine((p as IAnimal).Species);
                     var baby = p.TakeTurn(Board);
                     if (baby != null) babies.Add(baby);
                     if (baby != null && baby is Herbivore)
@@ -171,7 +141,6 @@ namespace nimble_life
                             a.IsDead = true;
                         }
                     }
-                    
                 }
             }
             
@@ -191,6 +160,7 @@ namespace nimble_life
         private Dictionary<string, float> Clone(Dictionary<string, float> genes)
         {
             var result = new Dictionary<string, float>();
+
             foreach (var k in genes.Keys)
             {
                 result[k] = genes[k];
@@ -244,13 +214,23 @@ namespace nimble_life
                                 Y = (int)(((float)Math.Min(ageOfMaturity, animal.Age)*(1.0 - babyRatio) / ageOfMaturity + (babyRatio)) * (tileSizeInPixels.Y/2.0))
                             };
 
-                            g.FillEllipse(
-                                new System.Drawing.SolidBrush(animal.Color),
-                                (float)((x+0.5) * tileSizeInPixels.X) - radius.X,
-                                (float)((y+0.5) * tileSizeInPixels.Y) - radius.Y,
-                                radius.X*2,
-                                radius.Y*2);
-                            
+                            if (animal is Herbivore)
+                            {
+                                g.FillEllipse(
+                                    new System.Drawing.SolidBrush(animal.Color),
+                                    (float)((x + 0.5) * tileSizeInPixels.X) - radius.X,
+                                    (float)((y + 0.5) * tileSizeInPixels.Y) - radius.Y,
+                                    radius.X * 2,
+                                    radius.Y * 2);
+                            } else
+                            {
+                                g.FillRectangle(
+                                    new System.Drawing.SolidBrush(animal.Color),
+                                    (float)((x + 0.5) * tileSizeInPixels.X) - radius.X,
+                                    (float)((y + 0.5) * tileSizeInPixels.Y) - radius.Y,
+                                    radius.X * 2,
+                                    radius.Y * 2);
+                            }
                             if (animal.IsDead) // Draw thick Red X
                             {
                                 g.DrawLine(new System.Drawing.Pen(System.Drawing.Brushes.Red, 3),
@@ -305,28 +285,36 @@ namespace nimble_life
                     {
                         Location = new nimble_life.Location { X = xpos, Y = ypos },
                         Energy = Rando.Next(75),
-                        Species = "Cow",
+                        Species = "Sheep",
                         Color = System.Drawing.Color.Black,
                         Age = Rando.Next(30),
                         AgeOfMaturity = Settings.AgeOfMaturity,
                         Genes = new Dictionary<string, float>()
                     };
                     herby.Genes = Clone(greatestGenes);
-                    //foreach(var k in latestGenes.Keys)
-                    //{
-                    //    herby.Genes[k] = latestGenes[k];
-                    //}
-                    
-                    /*
-                    float WorthMovingTo = 15;
-                    float MatingProbability = (float)0.3;
-                    float MinFoodAvailableForBaby = 30;
-                    float EnergyToBaby = (float)0.3;
-                    */
-
                     board.Pieces.Add(herby);
                     board.Tiles[xpos, ypos].Animal = herby;
                 }
+
+                if (Rando.Next(settings.OneInThisIsRobot) == 1)
+                {
+                    var robby = new Robot()
+                    {
+                        Location = new nimble_life.Location { X = xpos, Y = ypos },
+                        Energy = Rando.Next(75),
+                        Species = "Umbrella",
+                        Color = System.Drawing.Color.Black,
+                        Age = Rando.Next(30),
+                        AgeOfMaturity = Settings.AgeOfMaturity,
+                        Genes = new Dictionary<string, float>()
+                    };
+                    robby.Genes = Clone(greatestGenes);
+                    board.Pieces.Add(robby);
+                    board.Tiles[xpos, ypos].Animal = robby;
+                }
+
+
+
 
                 xpos++;
                 if (xpos >= settings.Width)

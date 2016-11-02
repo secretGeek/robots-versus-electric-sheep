@@ -115,6 +115,231 @@ namespace nimble_life
         SpeciationDistance
     }
 
+    public class Robot : IPiece, IAnimal
+    {
+        public string[] Actions { get; set; }
+        public Color Color { get; set; }
+        public float Energy { get; set; }
+        public Location Location { get; set; }
+        public List<IAnimal> MatingOffers { get; set; }
+        public string Species { get; set; }
+        public bool IsDead { get; set; }
+        public int Age { get; set; }
+        public int AgeOfMaturity { get; set; }
+        public Dictionary<string, float> Genes { get; set; }
+        public void ChooseAction(List<IPiece> neighbours)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Eat(IPiece piece)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Move()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OfferToMate(IAnimal animal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IPiece TakeTurn(Board board)
+        {
+            if (this.IsDead) return null;
+
+            IPiece result = null;
+
+            var moveDone = false;
+            var currentTile = board.Tiles[this.Location.X, this.Location.Y];
+
+            var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
+
+            var bestNeighbor = currentTile;
+
+            foreach (var t in neighbors)
+            {
+                if (t.Animal == null && t.Grass.Energy > bestNeighbor.Grass.Energy)
+                {
+                    bestNeighbor = t;
+                }
+            }
+
+            if (!moveDone && bestNeighbor != currentTile &&
+                (bestNeighbor.Grass.Energy > this.Genes[hg.WorthMovingTo.ToString()]))
+            {
+                // Move to it!
+                currentTile.Animal = null;
+                bestNeighbor.Animal = this;
+                this.Location.X = bestNeighbor.Location.X;
+                this.Location.Y = bestNeighbor.Location.Y;
+                this.Energy -= 5; //-1; //TAKES very little energy to move...
+                currentTile = board.Tiles[this.Location.X, this.Location.Y];
+                moveDone = true;
+            }
+            else
+            {
+                // Takes energy to stand still!
+                this.Energy -= 1;
+            }
+
+            if (!moveDone && currentTile.Grass.Energy > 15 && this.Energy < 100)
+            {
+                // Chew some.
+                currentTile.Grass.Energy -= 15;
+                this.Energy += 10; // Note inefficiency
+            }
+
+            //neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
+
+            //var bestLunch = currentTile;
+            //foreach (var t in neighbors)
+            //{
+            //    if (t.Animal != null && (t.Animal is Herbivore) && t.Animal.Energy > bestLunch.Animal.Energy)
+            //    {
+            //        bestLunch = t;
+            //    }
+            //}
+
+            //if (bestLunch != currentTile)
+            //{
+            //    this.Energy = this.Energy + bestLunch.Animal.Energy;
+
+            //    currentTile.Animal = null;
+            //    bestNeighbor.Animal = this;
+            //    this.Location.X = bestNeighbor.Location.X;
+            //    this.Location.Y = bestNeighbor.Location.Y;
+            //    //this.Energy -= 1; //TAKES very little energy to move...
+            //    currentTile = board.Tiles[this.Location.X, this.Location.Y];
+            //    moveDone = true;
+
+            //}
+
+            //if (!moveDone && bestNeighbor != currentTile &&
+            //    (bestNeighbor.Grass.Energy > this.Genes[hg.WorthMovingTo.ToString()]))
+            //{
+            //    // Move to it!
+            //    currentTile.Animal = null;
+            //    bestNeighbor.Animal = this;
+            //    this.Location.X = bestNeighbor.Location.X;
+            //    this.Location.Y = bestNeighbor.Location.Y;
+            //    this.Energy -= 1; //TAKES very little energy to move...
+            //    moveDone = true;
+            //}
+            //else
+            //{
+            //    // Takes energy to stand still!
+            //    this.Energy -= 1;
+            //}
+
+
+
+
+            this.Energy = Math.Min(100, this.Energy);
+
+            // Consider trying to mate...
+            if (Rando.Next() < this.Genes[hg.MatingProbability.ToString()]
+                            && this.Age >= this.AgeOfMaturity)
+            {
+                var hottestNeighbor = this as IAnimal;
+                foreach (var t in neighbors)
+                {
+                    if (t.Animal != null
+                        && t.Animal.Species == this.Species // picky
+                        && t.Animal.IsDead == false   // picky!
+                        && t.Animal.Age > t.Animal.AgeOfMaturity // picky
+                        && t.Animal.Energy >= hottestNeighbor.Energy) //picky
+                    {
+                        hottestNeighbor = t.Animal;
+                    }
+                }
+
+                if (hottestNeighbor != this) // picky
+                {
+                    if (hottestNeighbor.MatingOffers == null) hottestNeighbor.MatingOffers = new List<IAnimal>();
+                    // swipe right
+                    hottestNeighbor.MatingOffers.Add(this);
+                }
+            }
+
+            if (this.MatingOffers != null && this.Energy > this.Genes[hg.EnergyRequiredBeforeConsideringOffspring.ToString()])
+            {
+                var bestOffer = this.MatingOffers
+                    .Where(p =>
+                            p.IsDead == false
+                        && p.Species == this.Species
+                        && p.Age > p.AgeOfMaturity)
+                        .OrderByDescending(p => p.Energy).FirstOrDefault();
+
+                if (bestOffer != null)
+                {
+                    // Find an empty neighboring square to plonk a baby on...
+                    bestNeighbor = null;
+
+                    foreach (var t in neighbors)
+                    {
+                        if (t.Animal == null
+                            && (bestNeighbor == null || t.Grass.Energy > bestNeighbor.Grass.Energy)
+                            && t.Grass.Energy > this.Genes[hg.MinFoodAvailableForBaby.ToString()]) // what kind of a world are we bringing this child into...
+                        {
+                            bestNeighbor = t;
+                        }
+                    }
+
+                    if (bestNeighbor != null)
+                    {
+                        var baby = new Robot
+                        {
+                            Species = this.Species,
+                            Energy = (int)(this.Energy * this.Genes[hg.EnergyToBaby.ToString()]),
+                            Age = 0,
+                            AgeOfMaturity = this.AgeOfMaturity,
+                            Genes = new Dictionary<string, float>()
+                        };
+
+
+                        var MaxMutationFactor = this.Genes[hg.MaxMutationFactor.ToString()];
+
+                        foreach (var d in this.Genes.Keys)
+                        {
+                            var mutationFactor = (float)1 + (float)((Rando.Next() * MaxMutationFactor) - (MaxMutationFactor / 2));
+
+                            // Cross over and mutation
+                            baby.Genes[d] = Rando.Either(bestOffer.Genes[d], this.Genes[d]) * mutationFactor;
+                        }
+
+                        // Having babies really takes something out of you.
+                        this.Energy -= baby.Energy;
+
+                        baby.Location = new Location()
+                        {
+                            X = bestNeighbor.Location.X,
+                            Y = bestNeighbor.Location.Y
+                        };
+                        bestNeighbor.Animal = baby;
+                        result = baby;
+
+                        // Get rid of all mating offers.
+                        this.MatingOffers = null;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("No empty tile found.");
+                    }
+                }
+            }
+
+            // shade of gray depends on energy levels
+            var gray = Math.Max(0, Math.Min((int)(Energy * (256.0 / 100.0)), 255));
+
+            this.Color = Color.FromArgb(0,0, gray);
+            return result;
+        }
+    }
+
     public class Herbivore : IPiece, IAnimal
     {
         public string[] Actions { get; set; }
@@ -282,7 +507,7 @@ namespace nimble_life
                     }
                     else
                     {
-                        Debug.WriteLine("No empty file found.");
+                        Debug.WriteLine("No empty tile found.");
                     }
                 }
             }
@@ -294,15 +519,6 @@ namespace nimble_life
             return result;
         }
 
-        private float GeneDistance(IAnimal animal1, IAnimal animal2)
-        {
-            var totalDiff = (float)0;
-            foreach(var g in animal1.Genes.Keys)
-            {
-                totalDiff += Math.Abs(animal1.Genes[g] - animal2.Genes[g]);
-            }
-            return totalDiff;
-        }
     }
 
     public class Omnivore : IPiece, IAnimal
