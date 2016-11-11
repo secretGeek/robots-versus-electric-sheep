@@ -30,12 +30,17 @@
         {
             this.components = new System.ComponentModel.Container();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
+            this.pnlPopulationGraph = new System.Windows.Forms.Panel();
+            this.lblRobotCount = new System.Windows.Forms.Label();
+            this.lblSheepCount = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.lblMinGenerations = new System.Windows.Forms.Label();
+            this.lblMaxGenerations = new System.Windows.Forms.Label();
             this.lblGeneration = new System.Windows.Forms.Label();
             this.lblStuff = new System.Windows.Forms.Label();
             this.btnGo = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.lblMaxGenerations = new System.Windows.Forms.Label();
-            this.lblMinGenerations = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
             this.splitContainerMain.Panel1.SuspendLayout();
             this.splitContainerMain.SuspendLayout();
@@ -50,6 +55,11 @@
             // 
             // splitContainerMain.Panel1
             // 
+            this.splitContainerMain.Panel1.Controls.Add(this.pnlPopulationGraph);
+            this.splitContainerMain.Panel1.Controls.Add(this.lblRobotCount);
+            this.splitContainerMain.Panel1.Controls.Add(this.lblSheepCount);
+            this.splitContainerMain.Panel1.Controls.Add(this.label2);
+            this.splitContainerMain.Panel1.Controls.Add(this.label1);
             this.splitContainerMain.Panel1.Controls.Add(this.lblMinGenerations);
             this.splitContainerMain.Panel1.Controls.Add(this.lblMaxGenerations);
             this.splitContainerMain.Panel1.Controls.Add(this.lblGeneration);
@@ -63,25 +73,99 @@
             this.splitContainerMain.SplitterDistance = 47;
             this.splitContainerMain.TabIndex = 0;
             // 
+            // pnlPopulationGraph
+            // 
+            this.pnlPopulationGraph.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pnlPopulationGraph.Location = new System.Drawing.Point(183, 3);
+            this.pnlPopulationGraph.Name = "pnlPopulationGraph";
+            this.pnlPopulationGraph.Size = new System.Drawing.Size(700, 41);
+            this.pnlPopulationGraph.TabIndex = 9;
+            this.pnlPopulationGraph.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlPopulationGraph_Paint);
+            // 
+            // lblRobotCount
+            // 
+            this.lblRobotCount.AutoSize = true;
+            this.lblRobotCount.ForeColor = System.Drawing.Color.Blue;
+            this.lblRobotCount.Location = new System.Drawing.Point(153, 4);
+            this.lblRobotCount.Name = "lblRobotCount";
+            this.lblRobotCount.Size = new System.Drawing.Size(13, 13);
+            this.lblRobotCount.TabIndex = 8;
+            this.lblRobotCount.Text = "0";
+            // 
+            // lblSheepCount
+            // 
+            this.lblSheepCount.AutoSize = true;
+            this.lblSheepCount.ForeColor = System.Drawing.Color.DimGray;
+            this.lblSheepCount.Location = new System.Drawing.Point(152, 30);
+            this.lblSheepCount.Name = "lblSheepCount";
+            this.lblSheepCount.Size = new System.Drawing.Size(13, 13);
+            this.lblSheepCount.TabIndex = 7;
+            this.lblSheepCount.Text = "0";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.ForeColor = System.Drawing.Color.DimGray;
+            this.label2.Location = new System.Drawing.Point(106, 30);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(38, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "Sheep";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.ForeColor = System.Drawing.Color.Blue;
+            this.label1.Location = new System.Drawing.Point(106, 4);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(41, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Robots";
+            // 
+            // lblMinGenerations
+            // 
+            this.lblMinGenerations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblMinGenerations.AutoSize = true;
+            this.lblMinGenerations.Location = new System.Drawing.Point(796, 17);
+            this.lblMinGenerations.Name = "lblMinGenerations";
+            this.lblMinGenerations.Size = new System.Drawing.Size(13, 13);
+            this.lblMinGenerations.TabIndex = 4;
+            this.lblMinGenerations.Text = "0";
+            this.lblMinGenerations.Visible = false;
+            // 
+            // lblMaxGenerations
+            // 
+            this.lblMaxGenerations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblMaxGenerations.AutoSize = true;
+            this.lblMaxGenerations.Location = new System.Drawing.Point(768, 17);
+            this.lblMaxGenerations.Name = "lblMaxGenerations";
+            this.lblMaxGenerations.Size = new System.Drawing.Size(13, 13);
+            this.lblMaxGenerations.TabIndex = 3;
+            this.lblMaxGenerations.Text = "0";
+            this.lblMaxGenerations.Visible = false;
+            // 
             // lblGeneration
             // 
             this.lblGeneration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGeneration.AutoSize = true;
-            this.lblGeneration.Location = new System.Drawing.Point(767, 9);
+            this.lblGeneration.Location = new System.Drawing.Point(829, 17);
             this.lblGeneration.Name = "lblGeneration";
             this.lblGeneration.Size = new System.Drawing.Size(13, 13);
             this.lblGeneration.TabIndex = 2;
             this.lblGeneration.Text = "0";
+            this.lblGeneration.Visible = false;
             // 
             // lblStuff
             // 
             this.lblStuff.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblStuff.AutoSize = true;
-            this.lblStuff.Location = new System.Drawing.Point(861, 9);
+            this.lblStuff.Location = new System.Drawing.Point(861, 17);
             this.lblStuff.Name = "lblStuff";
             this.lblStuff.Size = new System.Drawing.Size(13, 13);
             this.lblStuff.TabIndex = 1;
             this.lblStuff.Text = "0";
+            this.lblStuff.Visible = false;
             // 
             // btnGo
             // 
@@ -93,26 +177,6 @@
             this.btnGo.UseVisualStyleBackColor = true;
             this.btnGo.Click += new System.EventHandler(this.btnGo_Click);
             // 
-            // lblMaxGenerations
-            // 
-            this.lblMaxGenerations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblMaxGenerations.AutoSize = true;
-            this.lblMaxGenerations.Location = new System.Drawing.Point(93, 17);
-            this.lblMaxGenerations.Name = "lblMaxGenerations";
-            this.lblMaxGenerations.Size = new System.Drawing.Size(13, 13);
-            this.lblMaxGenerations.TabIndex = 3;
-            this.lblMaxGenerations.Text = "0";
-            // 
-            // lblMinGenerations
-            // 
-            this.lblMinGenerations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblMinGenerations.AutoSize = true;
-            this.lblMinGenerations.Location = new System.Drawing.Point(162, 17);
-            this.lblMinGenerations.Name = "lblMinGenerations";
-            this.lblMinGenerations.Size = new System.Drawing.Size(13, 13);
-            this.lblMinGenerations.TabIndex = 4;
-            this.lblMinGenerations.Text = "0";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -121,7 +185,7 @@
             this.Controls.Add(this.splitContainerMain);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Animal Simulator";
+            this.Text = "Robots versus Electric Sheep";
             this.splitContainerMain.Panel1.ResumeLayout(false);
             this.splitContainerMain.Panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
@@ -139,6 +203,11 @@
         private System.Windows.Forms.Label lblGeneration;
         private System.Windows.Forms.Label lblMaxGenerations;
         private System.Windows.Forms.Label lblMinGenerations;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblSheepCount;
+        private System.Windows.Forms.Label lblRobotCount;
+        private System.Windows.Forms.Panel pnlPopulationGraph;
     }
 }
 

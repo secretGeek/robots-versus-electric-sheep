@@ -235,9 +235,6 @@ namespace nimble_life
             //    this.Energy -= 1;
             //}
 
-
-
-
             this.Energy = Math.Min(100, this.Energy);
 
             // Consider trying to mate...

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace nimble_life
 {
@@ -13,14 +14,18 @@ namespace nimble_life
         private Dictionary<string, float> greatestGenes = new Dictionary<string, float>();
         private Board Board { get; set; }
         private Bitmap bm { get; set; }
+        private Bitmap graph { get; set; }
         private int maxGenerations = 1;
         private int minGenerations = 2000;
+        bool? robotWins = null;
+        bool winnerWritten = false;
+
         private Settings Settings = new Settings
         {
             Width = 50,
             Height = 50,
             //MaxAge = 100,
-            Delay = 20, // //artificial delay in milliseconds. 0 for none
+            Delay = 0, // //artificial delay in milliseconds. 0 for none
             AgeOfMaturity = 18,
             OneInThisIsHerby = 40,
             OneInThisIsRobot = 40,
@@ -43,10 +48,17 @@ namespace nimble_life
             typeof(Panel).InvokeMember("DoubleBuffered",
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, this.splitContainerMain.Panel2, new object[] { true });
+
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                null, this.pnlPopulationGraph, new object[] { true });
         }
 
+        
         private void btnGo_Click(object sender, EventArgs e)
         {
+            robotWins = null;
+            upto = 0;
             //create the world.
             this.Board = CreateBoard(this.Settings);
 
@@ -143,18 +155,53 @@ namespace nimble_life
                     }
                 }
             }
-            
-            bm = RenderBoard();
-            lblGeneration.Text = Board.Generation.ToString();
-            lblStuff.Text = Board.Pieces.Count.ToString();
-            lblMaxGenerations.Text = maxGenerations.ToString();
-            lblMinGenerations.Text = minGenerations.ToString();
-            this.splitContainerMain.Panel2.Invalidate();
-            
+
+            sheepPopulation = Board.Pieces.Where(p => (p is Herbivore)).Count();
+            robotPopulation = Board.Pieces.Where(p => (p is Robot)).Count();
+            if (robotWins == null)
+            {
+                if (sheepPopulation == 0)
+                {
+                    winnerWritten = false;
+                    robotWins = true;
+                }
+                else if (robotPopulation == 0)
+                {
+                    winnerWritten = false;
+                    robotWins = false;
+
+                }
+            }
+
             if (Settings.Delay > 0)
             {
                 System.Threading.Thread.Sleep(Settings.Delay);
             }
+
+            UpdateScreen();
+        }
+
+        private void UpdateScreen()
+        {
+            UpdateLabels(); 
+            bm = RenderBoard();
+            graph = RenderGraph();
+        
+            this.splitContainerMain.Panel2.Invalidate();
+            this.pnlPopulationGraph.Invalidate();
+        }
+
+        int sheepPopulation = 1;
+        int robotPopulation = 1;
+
+        private void UpdateLabels()
+        {
+            lblGeneration.Text = Board.Generation.ToString();
+            lblStuff.Text = Board.Pieces.Count.ToString();
+            lblMaxGenerations.Text = maxGenerations.ToString();
+            lblMinGenerations.Text = minGenerations.ToString();
+            lblSheepCount.Text = sheepPopulation.ToString();
+            lblRobotCount.Text = robotPopulation.ToString();
         }
 
         private Dictionary<string, float> Clone(Dictionary<string, float> genes)
@@ -169,6 +216,62 @@ namespace nimble_life
             return result;
         }
 
+        int upto = 0;
+        
+        private Bitmap RenderGraph()
+        {
+            if (Board == null) return null;
+
+            var graphSizeInPixels = new Location
+            {
+                X = pnlPopulationGraph.Width,
+                Y = pnlPopulationGraph.Height
+            };
+            
+            upto = (upto+1) % pnlPopulationGraph.Width;
+
+            var robotRatio = (float)robotPopulation / (float)(robotPopulation + sheepPopulation);
+            var sheepRatio = (float)sheepPopulation / (float)(robotPopulation + sheepPopulation);
+            var robotBarHeight = pnlPopulationGraph.Height * robotRatio;
+            var sheepBarHeight = pnlPopulationGraph.Height * sheepRatio;
+            //var newSize = new Size(pnlPopulationGraph.Size);
+            if (graph == null)
+            {
+                graph = new Bitmap(pnlPopulationGraph.Width, pnlPopulationGraph.Height);
+            }
+            var result = new Bitmap(graph, pnlPopulationGraph.Size);
+            //var result = new Bitmap(graphSizeInPixels.X, graphSizeInPixels.Y);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.FillRectangle(
+                            Brushes.Blue,
+                            upto,
+                            0,
+                            1,
+                            robotBarHeight);
+                g.FillRectangle(
+                            Brushes.Gray,
+                            upto,
+                            robotBarHeight,
+                            1,
+                            sheepBarHeight);
+                g.FillRectangle(
+                            Brushes.Yellow,
+                            upto+1,
+                            0,
+                            1,
+                            pnlPopulationGraph.Height);
+
+                if (robotWins != null && winnerWritten == false)
+                {
+
+                    g.DrawString(robotWins.Value ? "ROBOTS WIN!" : "SHEEP WIN!", new Font(FontFamily.GenericMonospace, 12), Brushes.White, 10, 10);
+                    winnerWritten = true;
+                }
+
+            }
+            return result;
+        }
         private Bitmap RenderBoard()
         {
             if (Board == null) return null;
@@ -313,9 +416,6 @@ namespace nimble_life
                     board.Tiles[xpos, ypos].Animal = robby;
                 }
 
-
-
-
                 xpos++;
                 if (xpos >= settings.Width)
                 {
@@ -325,6 +425,12 @@ namespace nimble_life
             }
 
             return board;
+        }
+
+        private void pnlPopulationGraph_Paint(object sender, PaintEventArgs e)
+        {
+            if (graph == null) return;
+            e.Graphics.DrawImage(graph, new Point(0, 0));
         }
     }
 }
