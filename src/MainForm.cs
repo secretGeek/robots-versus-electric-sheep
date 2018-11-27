@@ -22,10 +22,9 @@ namespace nimble_life
 
         private Settings Settings = new Settings
         {
-            Width = 50,
-            Height = 50,
-            //MaxAge = 100,
-            Delay = 0, // //artificial delay in milliseconds. 0 for none
+            Width = 20,
+            Height = 20,
+            Delay = 0, //artificial delay in milliseconds. 0 for none
             AgeOfMaturity = 18,
             OneInThisIsHerby = 40,
             OneInThisIsRobot = 40,
@@ -53,12 +52,12 @@ namespace nimble_life
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, this.pnlPopulationGraph, new object[] { true });
         }
-
         
         private void btnGo_Click(object sender, EventArgs e)
         {
             robotWins = null;
-            upto = 0;
+            graph = null;
+            uptoYColumn = 0;
             //create the world.
             this.Board = CreateBoard(this.Settings);
 
@@ -87,7 +86,7 @@ namespace nimble_life
             }
 
             //HACK: Gone too long, so START AGAIN!
-            //if (Board.Generation > 50000)
+            //if (Board.Generation > 60)
             //{
             //    this.Board = CreateBoard(this.Settings);
             //}
@@ -131,6 +130,7 @@ namespace nimble_life
                         latestGenes = Clone(babyGenes);
                     }
                 }
+
                 if (babies.Count > 0)
                 {
                     foreach(var b in babies)
@@ -158,6 +158,7 @@ namespace nimble_life
 
             sheepPopulation = Board.Pieces.Where(p => (p is Herbivore)).Count();
             robotPopulation = Board.Pieces.Where(p => (p is Robot)).Count();
+
             if (robotWins == null)
             {
                 if (sheepPopulation == 0)
@@ -216,7 +217,7 @@ namespace nimble_life
             return result;
         }
 
-        int upto = 0;
+        int uptoYColumn = 0;
         
         private Bitmap RenderGraph()
         {
@@ -228,7 +229,7 @@ namespace nimble_life
                 Y = pnlPopulationGraph.Height
             };
             
-            upto = (upto+1) % pnlPopulationGraph.Width;
+            uptoYColumn = (uptoYColumn+1) % pnlPopulationGraph.Width;
 
             var robotRatio = (float)robotPopulation / (float)(robotPopulation + sheepPopulation);
             var sheepRatio = (float)sheepPopulation / (float)(robotPopulation + sheepPopulation);
@@ -240,38 +241,39 @@ namespace nimble_life
                 graph = new Bitmap(pnlPopulationGraph.Width, pnlPopulationGraph.Height);
             }
             var result = new Bitmap(graph, pnlPopulationGraph.Size);
-            //var result = new Bitmap(graphSizeInPixels.X, graphSizeInPixels.Y);
             using (var g = Graphics.FromImage(result))
             {
                 g.FillRectangle(
                             Brushes.Blue,
-                            upto,
+                            uptoYColumn,
                             0,
                             1,
                             robotBarHeight);
+
                 g.FillRectangle(
                             Brushes.Gray,
-                            upto,
+                            uptoYColumn,
                             robotBarHeight,
                             1,
                             sheepBarHeight);
+
                 g.FillRectangle(
                             Brushes.Yellow,
-                            upto+1,
+                            uptoYColumn+1,
                             0,
                             1,
                             pnlPopulationGraph.Height);
 
                 if (robotWins != null && winnerWritten == false)
                 {
-
-                    g.DrawString(robotWins.Value ? "ROBOTS WIN!" : "SHEEP WIN!", new Font(FontFamily.GenericMonospace, 12), Brushes.White, 10, 10);
+                    g.DrawString(robotWins.Value ? "ROBOTS WIN!" : "ELECTRIC SHEEP WIN!", new Font(FontFamily.GenericMonospace, 12), Brushes.White, 10, 10);
                     winnerWritten = true;
                 }
-
             }
+
             return result;
         }
+
         private Bitmap RenderBoard()
         {
             if (Board == null) return null;
@@ -308,7 +310,7 @@ namespace nimble_life
                         if (animal != null)
                         {
 
-                            var babyRatio = 0.1; //what size of an adult is a newborn baby? (e.g. 10% of adult size, then 0.1)
+                            var babyRatio = 0.01; //what size of an adult is a newborn baby? (e.g. 10% of adult size, then 0.1)
                             var ageOfMaturity = animal.AgeOfMaturity; //at what age are animals fullgrown?
 
                             var radius = new Location
@@ -388,7 +390,7 @@ namespace nimble_life
                     {
                         Location = new nimble_life.Location { X = xpos, Y = ypos },
                         Energy = Rando.Next(75),
-                        Species = "Sheep",
+                        Species = "Electric Sheep",
                         Color = System.Drawing.Color.Black,
                         Age = Rando.Next(30),
                         AgeOfMaturity = Settings.AgeOfMaturity,
@@ -397,20 +399,19 @@ namespace nimble_life
                     herby.Genes = Clone(greatestGenes);
                     board.Pieces.Add(herby);
                     board.Tiles[xpos, ypos].Animal = herby;
-                }
-
-                if (Rando.Next(settings.OneInThisIsRobot) == 1)
+                } else if (Rando.Next(settings.OneInThisIsRobot) == 1)
                 {
                     var robby = new Robot()
                     {
                         Location = new nimble_life.Location { X = xpos, Y = ypos },
                         Energy = Rando.Next(75),
-                        Species = "Umbrella",
+                        Species = "Robot",
                         Color = System.Drawing.Color.Black,
                         Age = Rando.Next(30),
                         AgeOfMaturity = Settings.AgeOfMaturity,
                         Genes = new Dictionary<string, float>()
                     };
+
                     robby.Genes = Clone(greatestGenes);
                     board.Pieces.Add(robby);
                     board.Tiles[xpos, ypos].Animal = robby;

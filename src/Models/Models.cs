@@ -6,39 +6,7 @@ using System.Diagnostics;
 
 namespace nimble_life
 {
-    public static class Rando
-    {
-        private static Random r = new Random(Guid.NewGuid().GetHashCode());
-        public static int Next(int limit)
-        {
-            return r.Next(limit);
-        }
 
-        public static double Next()
-        {
-            return r.NextDouble();
-        }
-
-        public static float Either(float num1, float num2)
-        {
-            return r.Next(1) == 0 ? num1 : num2;
-        }
-
-        // shuffle the members of a list (in-place)
-        public static void Shuffle<T>(this IList<T> list)
-        {
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = r.Next(n + 1);
-                //swap n with k.
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
-        }
-    }
     public class Board
     {
         public Location Size { get; set; }
@@ -76,6 +44,7 @@ namespace nimble_life
             return result;
         }
     }
+
     public class Tile
     {
         public Grass Grass { get; set; }
@@ -378,9 +347,7 @@ namespace nimble_life
 
             var moveDone = false;
             var currentTile = board.Tiles[this.Location.X, this.Location.Y];
-
             var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
-
             var bestNeighbor = currentTile;
 
             foreach (var t in neighbors)
@@ -400,6 +367,7 @@ namespace nimble_life
                 this.Location.X = bestNeighbor.Location.X;
                 this.Location.Y = bestNeighbor.Location.Y;
                 this.Energy -= 5; //TAKES energy to move...
+                currentTile = board.Tiles[this.Location.X, this.Location.Y];
                 moveDone = true;
             }
             else
@@ -515,7 +483,6 @@ namespace nimble_life
             this.Color = Color.FromArgb(gray, gray, gray);
             return result;
         }
-
     }
 
     public class Omnivore : IPiece, IAnimal

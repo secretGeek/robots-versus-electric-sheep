@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.pnlPopulationGraph = new System.Windows.Forms.Panel();
             this.lblRobotCount = new System.Windows.Forms.Label();
@@ -169,9 +170,9 @@
             // 
             // btnGo
             // 
-            this.btnGo.Location = new System.Drawing.Point(12, 12);
+            this.btnGo.Location = new System.Drawing.Point(12, 3);
             this.btnGo.Name = "btnGo";
-            this.btnGo.Size = new System.Drawing.Size(75, 23);
+            this.btnGo.Size = new System.Drawing.Size(75, 41);
             this.btnGo.TabIndex = 0;
             this.btnGo.Text = "GO";
             this.btnGo.UseVisualStyleBackColor = true;
@@ -183,6 +184,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(886, 578);
             this.Controls.Add(this.splitContainerMain);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Robots versus Electric Sheep";
