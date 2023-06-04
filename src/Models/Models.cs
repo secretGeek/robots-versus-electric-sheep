@@ -6,7 +6,6 @@ using System.Diagnostics;
 
 namespace nimble_life
 {
-
     public class Board
     {
         public Location Size { get; set; }
@@ -15,20 +14,35 @@ namespace nimble_life
         //public int MaxAge { get; set; }
         public int Generation { get; set; }
 
-        internal List<Tile> GetNeighbors(int x, int y)
+        internal List<Tile> GetNeighbors(int x, int y, int radius)
         {
             var result = new List<Tile>();
 
-            for (int i = 0; i < 3; i++)
+            // We call it a radius, even though it's a square neighborhood.
+            // If I can 'see' a distance of '2' squares around me...
+            //
+            //    2  2  2  2  2
+            //    2  1  1  1  2
+            //    2  1  O  1  2
+            //    2  1  1  1  2
+            //    2  2  2  2  2
+            //
+            // ...then that neighborhood is 5x5.
+            // So the width of the neighborhood is (radius * 2 + 1), and the 
+            // radius of 2, means an offset from the corners to the centre of [+/-2, +/-2]
+
+            var neighborhoodWidth = (radius * 2 + 1); // Will be an odd number.
+
+            for (int i = 0; i < neighborhoodWidth; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < neighborhoodWidth; j++)
                 {
-                    var offsetX = i - 1;
-                    var offsetY = j - 1;
+                    var offsetX = i - radius;
+                    var offsetY = j - radius;
                     var newX = x + offsetX;
                     var newY = y + offsetY;
-                    if (newX < 0) newX = Size.X - 1;
-                    if (newY < 0) newY = Size.Y - 1;
+                    if (newX < 0) newX = Size.X - radius;
+                    if (newY < 0) newY = Size.Y - radius;
                     if (newX >= Size.X) newX = 0;
                     if (newY >= Size.Y) newY = 0;
 
@@ -52,20 +66,43 @@ namespace nimble_life
         public Location Location { get; set; }
     }
 
+    
     public class Grass : IPiece
     {
         public string[] Actions { get; set; }
         public Color Color { get; set; }
         public float Energy { get; set; }
         public Location Location { get; set; }
-
+        public float MaxEnergy { get; set; } = 100f;
+        public float ReGrowthPerTurn { get; set; } = 0.15f;
         public IPiece TakeTurn(Board board)
         {
             // Grass quickly grows... 
-            if (Energy < 99) Energy = Energy + (float)0.15;
-            if (Energy > 99) Energy = 99;
+            if (Energy < MaxEnergy) Energy = Energy + ReGrowthPerTurn;
+            if (Energy > MaxEnergy) Energy = MaxEnergy;
 
-            var green = Math.Min((int)(Energy * (256.0 / 100.0)), 255);
+            var green = Math.Min((int)(Energy * (255.0 / MaxEnergy)), 255);
+
+            this.Color = Color.FromArgb(0, green, 0);
+            return null;
+        }
+    }
+
+    public class Tree : IPiece
+    {
+        public string[] Actions { get; set; }
+        public Color Color { get; set; }
+        public float Energy { get; set; }
+        public Location Location { get; set; }
+        public float MaxEnergy { get; set; } = 200f;
+        public float ReGrowthPerTurn { get; set; } = 0.05f;
+        public IPiece TakeTurn(Board board)
+        {
+            // Tree grows slowly...
+            if (Energy < MaxEnergy) Energy = Energy + ReGrowthPerTurn;
+            if (Energy > MaxEnergy) Energy = MaxEnergy;
+
+            var green = Math.Min((int)(Energy * (128.0 / MaxEnergy)), 128);
 
             this.Color = Color.FromArgb(0, green, 0);
             return null;
@@ -84,8 +121,33 @@ namespace nimble_life
         SpeciationDistance
     }
 
+    public static class GenesHelper
+    {
+        public static Dictionary<string, float> GreatestGenes()
+        {
+            var greatestGenes = new Dictionary<string, float>();
+            greatestGenes[hg.EnergyToBaby.ToString()] = (float)0.16;
+            greatestGenes[hg.MatingProbability.ToString()] = (float)0.7;
+            greatestGenes[hg.MinFoodAvailableForBaby.ToString()] = (float)3.8;
+            greatestGenes[hg.WorthMovingTo.ToString()] = (float)3.2;
+            greatestGenes[hg.EnergyRequiredBeforeConsideringOffspring.ToString()] = 61;
+            greatestGenes[hg.MaxAge.ToString()] = 343;
+            greatestGenes[hg.MaxMutationFactor.ToString()] = (float)0.13;
+            greatestGenes[hg.SpeciationDistance.ToString()] = (float)25;
+            return greatestGenes;
+        }
+    }
+
     public class Robot : IPiece, IAnimal
     {
+        public float MaxEnergy { get; set; } = 100f;
+        public float EnergyRequiredToMove { get; set; } = 5f;
+        public float EnergyRequiredToStandStill { get; set; } = 1f;
+        public float AmountOfEnergyTakenFromGrass { get; set; } = 15f;
+        public float AmountOfEnergyGainedFromGrass { get; set; } = 10f;
+        
+        private int NeighborhoodRadius { get; set; } = 1;
+
         public string[] Actions { get; set; }
         public Color Color { get; set; }
         public float Energy { get; set; }
@@ -96,7 +158,7 @@ namespace nimble_life
         public int Age { get; set; }
         public int AgeOfMaturity { get; set; }
         public Dictionary<string, float> Genes { get; set; }
-        public void ChooseAction(List<IPiece> neighbours)
+        public void ChooseAction(List<IPiece> neighbors)
         {
             throw new NotImplementedException();
         }
@@ -125,7 +187,7 @@ namespace nimble_life
             var moveDone = false;
             var currentTile = board.Tiles[this.Location.X, this.Location.Y];
 
-            var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
+            var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y, this.NeighborhoodRadius);
 
             var bestNeighbor = currentTile;
 
@@ -145,21 +207,21 @@ namespace nimble_life
                 bestNeighbor.Animal = this;
                 this.Location.X = bestNeighbor.Location.X;
                 this.Location.Y = bestNeighbor.Location.Y;
-                this.Energy -= 5; //-1; //TAKES very little energy to move...
+                this.Energy -= EnergyRequiredToMove; //-1; //TAKES very little energy to move...
                 currentTile = board.Tiles[this.Location.X, this.Location.Y];
                 moveDone = true;
             }
             else
             {
                 // Takes energy to stand still!
-                this.Energy -= 1;
+                this.Energy -= EnergyRequiredToStandStill;
             }
 
-            if (!moveDone && currentTile.Grass.Energy > 15 && this.Energy < 100)
+            if (!moveDone && currentTile.Grass.Energy > AmountOfEnergyTakenFromGrass && this.Energy < MaxEnergy)
             {
                 // Chew some.
-                currentTile.Grass.Energy -= 15;
-                this.Energy += 10; // Note inefficiency
+                currentTile.Grass.Energy -= AmountOfEnergyTakenFromGrass;
+                this.Energy += AmountOfEnergyGainedFromGrass; // Note inefficiency
             }
 
             //neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
@@ -204,7 +266,7 @@ namespace nimble_life
             //    this.Energy -= 1;
             //}
 
-            this.Energy = Math.Min(100, this.Energy);
+            this.Energy = Math.Min(this.MaxEnergy, this.Energy);
 
             // Consider trying to mate...
             if (Rando.Next() < this.Genes[hg.MatingProbability.ToString()]
@@ -299,15 +361,22 @@ namespace nimble_life
             }
 
             // shade of gray depends on energy levels
-            var gray = Math.Max(0, Math.Min((int)(Energy * (256.0 / 100.0)), 255));
+            var gray = Math.Max(0, Math.Min((int)(Energy * (255.0 / this.MaxEnergy)), 255));
 
-            this.Color = Color.FromArgb(0,0, gray);
+            this.Color = Color.FromArgb(0, 0, gray);
             return result;
         }
     }
 
     public class Herbivore : IPiece, IAnimal
     {
+        public float EnergyRequiredToMove { get; set; } = 5f;
+        public float EnergyRequiredToStandStill { get; set; } = 1f;
+        public float AmountOfEnergyTakenFromGrass { get; set; } = 15f;
+        public float AmountOfEnergyGainedFromGrass { get; set; } = 10f;
+        public float MaxEnergy { get; set; } = 100f;
+        private int NeighborhoodRadius { get; set; } = 1;
+
         public string[] Actions { get; set; }
         public Color Color { get; set; }
         public float Energy { get; set; }
@@ -319,7 +388,7 @@ namespace nimble_life
         public int AgeOfMaturity { get; set; }
         public Dictionary<string, float> Genes { get; set; }
 
-        public void ChooseAction(List<IPiece> neighbours)
+        public void ChooseAction(List<IPiece> neighbors)
         {
             throw new NotImplementedException();
         }
@@ -347,7 +416,7 @@ namespace nimble_life
 
             var moveDone = false;
             var currentTile = board.Tiles[this.Location.X, this.Location.Y];
-            var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y);
+            var neighbors = board.GetNeighbors(this.Location.X, this.Location.Y, this.NeighborhoodRadius);
             var bestNeighbor = currentTile;
 
             foreach (var t in neighbors)
@@ -366,25 +435,26 @@ namespace nimble_life
                 bestNeighbor.Animal = this;
                 this.Location.X = bestNeighbor.Location.X;
                 this.Location.Y = bestNeighbor.Location.Y;
-                this.Energy -= 5; //TAKES energy to move...
+                this.Energy -= EnergyRequiredToMove; //TAKES energy to move...
                 currentTile = board.Tiles[this.Location.X, this.Location.Y];
                 moveDone = true;
             }
             else
             {
                 // Takes energy to stand still!
-                this.Energy -= 1;
+                this.Energy -= EnergyRequiredToStandStill;
             }
 
-            if (!moveDone && currentTile.Grass.Energy > 15 && this.Energy < 100)
+            if (!moveDone && currentTile.Grass.Energy > AmountOfEnergyTakenFromGrass && this.Energy < MaxEnergy)
             {
+
                 // Chew some.
-                currentTile.Grass.Energy -= 15;
-                this.Energy += 10; // Note inefficiency
+                currentTile.Grass.Energy -= AmountOfEnergyTakenFromGrass;
+                this.Energy += AmountOfEnergyGainedFromGrass; // Note inefficiency
             }
 
-            this.Energy = Math.Min(100, this.Energy);
-            
+            this.Energy = Math.Min(MaxEnergy, this.Energy);
+
             // Consider trying to mate...
             if (Rando.Next() < this.Genes[hg.MatingProbability.ToString()]
                             && this.Age >= this.AgeOfMaturity)
@@ -421,7 +491,7 @@ namespace nimble_life
 
                 if (bestOffer != null)
                 {
-                    // Find an empty neighboring square to plonk a baby on...
+                    // Find the best empty neighboring square to plonk a baby on...
                     bestNeighbor = null;
 
                     foreach (var t in neighbors)
@@ -434,8 +504,15 @@ namespace nimble_life
                         }
                     }
 
-                    if (bestNeighbor != null)
+                    if (bestNeighbor == null)
                     {
+                        Debug.WriteLine("No empty tile found on which to raise a child.");
+                    }
+                    else
+                    {
+                        // Okay - we know where the baby will go.
+                        // Let's make this baby!
+
                         var baby = new Herbivore
                         {
                             Species = this.Species,
@@ -464,21 +541,18 @@ namespace nimble_life
                             X = bestNeighbor.Location.X,
                             Y = bestNeighbor.Location.Y
                         };
+
                         bestNeighbor.Animal = baby;
                         result = baby;
 
                         // Get rid of all mating offers.
                         this.MatingOffers = null;
                     }
-                    else
-                    {
-                        Debug.WriteLine("No empty tile found.");
-                    }
                 }
             }
 
             // shade of gray depends on energy levels
-            var gray = Math.Max(0, Math.Min((int)(Energy * (256.0 / 100.0)), 255));
+            var gray = Math.Max(0, Math.Min((int)(Energy * (255.0 / this.MaxEnergy)), 255));
 
             this.Color = Color.FromArgb(gray, gray, gray);
             return result;
@@ -497,8 +571,13 @@ namespace nimble_life
         public bool IsDead { get; set; }
         public int Age { get; set; }
         public int AgeOfMaturity { get; set; }
+        public float MaxEnergy { get; set; } = 100f;
+        public float EnergyRequiredToMove { get; set; } = 5f;
+        public float EnergyRequiredToStandStill { get; set; } = 1f;
+        public float AmountOfEnergyTakenFromGrass { get; set; } = 15f;
+        public float AmountOfEnergyGainedFromGrass { get; set; } = 10f;
 
-        public void ChooseAction(List<IPiece> neighbours)
+        public void ChooseAction(List<IPiece> neighbors)
         {
             throw new NotImplementedException();
         }
@@ -537,7 +616,14 @@ namespace nimble_life
         public int Age { get; set; }
         public int AgeOfMaturity { get; set; }
 
-        public void ChooseAction(List<IPiece> neighbours)
+        public float MaxEnergy { get; set; } = 100f;
+
+        public float EnergyRequiredToMove { get; set; } = 5f;
+        public float EnergyRequiredToStandStill { get; set; } = 1f;
+        public float AmountOfEnergyTakenFromGrass { get; set; } = 15f;
+        public float AmountOfEnergyGainedFromGrass { get; set; } = 10f;
+
+        public void ChooseAction(List<IPiece> neighbors)
         {
             throw new NotImplementedException();
         }
@@ -565,7 +651,7 @@ namespace nimble_life
 
     public interface IAnimal : IPiece
     {
-        void ChooseAction(List<IPiece> neighbours);
+        void ChooseAction(List<IPiece> neighbors);
         Dictionary<string, float> Genes { get; set; }
         void Eat(IPiece piece);
         void Move();
@@ -575,6 +661,11 @@ namespace nimble_life
         void OfferToMate(IAnimal animal);
         List<IAnimal> MatingOffers { get; set; }
         string Species { get; set; }
+
+        float EnergyRequiredToMove { get; set; } //= 5f;
+        float EnergyRequiredToStandStill { get; set; } //= 1f;
+        float AmountOfEnergyTakenFromGrass { get; set; } //= 15f;
+        float AmountOfEnergyGainedFromGrass { get; set; } //= 10f;
     }
 
     public interface IPiece
@@ -584,6 +675,8 @@ namespace nimble_life
         IPiece TakeTurn(Board board);
         string[] Actions { get; set; }
         Color Color { get; set; }
+
+        float MaxEnergy { get; set; } //= 100f
     }
 
     public class Location

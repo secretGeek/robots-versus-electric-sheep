@@ -20,28 +20,12 @@ namespace nimble_life
         bool? robotWins = null;
         bool winnerWritten = false;
 
-        private Settings Settings = new Settings
-        {
-            Width = 20,
-            Height = 20,
-            Delay = 0, //artificial delay in milliseconds. 0 for none
-            AgeOfMaturity = 18,
-            OneInThisIsHerby = 40,
-            OneInThisIsRobot = 40,
-        };
+        private WorldSettings Settings = WorldSettings.GetDefault();
 
         public MainForm()
         {
             InitializeComponent();
-            greatestGenes = new Dictionary<string, float>();
-            greatestGenes[hg.EnergyToBaby.ToString()] = (float)0.16;
-            greatestGenes[hg.MatingProbability.ToString()] = (float)0.7;
-            greatestGenes[hg.MinFoodAvailableForBaby.ToString()] = (float)3.8;
-            greatestGenes[hg.WorthMovingTo.ToString()] = (float)3.2;
-            greatestGenes[hg.EnergyRequiredBeforeConsideringOffspring.ToString()] = 61;
-            greatestGenes[hg.MaxAge.ToString()] = 343;
-            greatestGenes[hg.MaxMutationFactor.ToString()] = (float)0.13;
-            greatestGenes[hg.SpeciationDistance.ToString()] = (float)25;
+            greatestGenes = GenesHelper.GreatestGenes();
 
             //See http://stackoverflow.com/questions/8046560/how-to-stop-flickering-c-sharp-winforms
             typeof(Panel).InvokeMember("DoubleBuffered",
@@ -358,7 +342,7 @@ namespace nimble_life
             return result;
         }
 
-        private Board CreateBoard(Settings settings)
+        private Board CreateBoard(WorldSettings settings)
         {
             var board = new Board
             {
@@ -384,15 +368,17 @@ namespace nimble_life
                     Location = new Location { X = xpos, Y = ypos }
                 };
 
+                
+
                 if (Rando.Next(settings.OneInThisIsHerby) ==1)
                 {
                     var herby = new Herbivore()
                     {
                         Location = new nimble_life.Location { X = xpos, Y = ypos },
-                        Energy = Rando.Next(75),
+                        Energy = Rando.Next(settings.StartingEnergyLimit),
                         Species = "Electric Sheep",
                         Color = System.Drawing.Color.Black,
-                        Age = Rando.Next(30),
+                        Age = Rando.Next(settings.StartingAgeLimit),
                         AgeOfMaturity = Settings.AgeOfMaturity,
                         Genes = new Dictionary<string, float>()
                     };
@@ -404,10 +390,10 @@ namespace nimble_life
                     var robby = new Robot()
                     {
                         Location = new nimble_life.Location { X = xpos, Y = ypos },
-                        Energy = Rando.Next(75),
+                        Energy = Rando.Next(settings.StartingEnergyLimit),
                         Species = "Robot",
                         Color = System.Drawing.Color.Black,
-                        Age = Rando.Next(30),
+                        Age = Rando.Next(settings.StartingAgeLimit),
                         AgeOfMaturity = Settings.AgeOfMaturity,
                         Genes = new Dictionary<string, float>()
                     };
